@@ -14,92 +14,49 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
-signInAnonymously(auth);
+signInAnonymously(getAuth(app));
 
-async function fetchActivities() {
-  const snapshot = await getDocs(collection(db, 'activities'));
-  const select = document.getElementById('activity-select');
-  select.innerHTML = '';
-  snapshot.forEach(doc => {
-    const opt = document.createElement('option');
-    opt.value = doc.id;
-    opt.textContent = doc.data().name;
-    select.appendChild(opt);
+const activitySelect = document.getElementById("activity-select");
+const pointsForm = document.getElementById("points-form");
+
+async function loadData() {
+  const activities = await getDocs(collection(db, "activities"));
+  activitySelect.innerHTML = "";
+  activities.forEach(a => {
+    const opt = document.createElement("option");
+    opt.value = a.id;
+    opt.textContent = a.data().name;
+    activitySelect.appendChild(opt);
   });
-}
 
-async function fetchGroups() {
-  const snapshot = await getDocs(collection(db, 'groups'));
-  const container = document.getElementById('groups');
-  const list = document.getElementById('group-list');
-  container.innerHTML = '';
-  list.innerHTML = '';
-
-  snapshot.forEach((doc, index) => {
-    const group = doc.data();
-    const div = document.createElement('div');
-    div.className = 'group-row';
-    div.innerHTML = `
-      ${group.name}:
-      <input type="number" id="group${index + 1}-points" placeholder="Punkte" min="0" max="10" />
-      <input type="number" id="group${index + 1}-bonus" placeholder="Bonus" min="0" max="3" />
+  const groups = await getDocs(collection(db, "groups"));
+  pointsForm.innerHTML = "";
+  groups.forEach(g => {
+    const d = document.createElement("div");
+    d.className = "group-row";
+    d.innerHTML = `
+      <strong>${g.data().name}</strong><br/>
+      <label>Punkte: <input type="number" id="points-${g.id}" min="0" max="100" /></label><br/>
+      <label>Bonus: <input type="number" id="bonus-${g.id}" min="0" max="3" /></label><br/>
+      <label>Kommentar:<br/><textarea id="comment-${g.id}" rows="2"></textarea></label>
     `;
-    container.appendChild(div);
-
-    const li = document.createElement('li');
-    li.textContent = `${group.name} (${group.house})`;
-    list.appendChild(li);
+    pointsForm.appendChild(d);
   });
 }
-
-window.savePoints = async function savePoints() {
-  const activityId = document.getElementById('activity-select').value;
-  const groupDivs = document.querySelectorAll('.group-row');
-  for (let i = 0; i < groupDivs.length; i++) {
-    const groupId = `group${i + 1}`;
-    const points = parseInt(document.getElementById(`group${i + 1}-points`).value) || 0;
-    const bonus = parseInt(document.getElementById(`group${i + 1}-bonus`).value) || 0;
-    await setDoc(doc(db, 'scores', `${activityId}_${groupId}`), {
-      activityId,
-      groupId,
-      points,
-      bonusPoints: bonus
-    });
-  }
+window.submitScores = async function () {
+  const act = activitySelect.value;
+  const groups = await getDocs(collection(db, "groups"));
+  groups.forEach(async g => {
+    const id = g.id;
+    const data = {
+      activityId: act,
+      groupId: id,
+      points: parseInt(document.getElementById(`points-${id}`).value) || 0,
+      bonus: parseInt(document.getElementById(`bonus-${id}`).value) || 0,
+      comment: document.getElementById(`comment-${id}`).value || ""
+    };
+    await setDoc(doc(db, "scores", `${act}_${id}`), data);
+  });
   alert("Punkte gespeichert!");
-}
-
-window.createActivity = async function createActivity() {
-  const name = document.getElementById('activity-name').value;
-  const date = document.getElementById('activity-date').value;
-  const maxPoints = parseInt(document.getElementById('activity-maxpoints').value) || 10;
-  const allowBonus = document.getElementById('activity-bonus').checked;
-  if (!name || !date) return alert("Bitte Name und Datum eingeben");
-  await addDoc(collection(db, 'activities'), {
-    name,
-    date,
-    maxPoints,
-    allowBonus
-  });
-  alert("Aktivität angelegt!");
-  await fetchActivities();
-}
-
-window.addGroup = async function addGroup() {
-  const name = document.getElementById('group-name').value;
-  const house = document.getElementById('group-house').value;
-  if (!name) return alert("Gruppenname eingeben!");
-  await addDoc(collection(db, 'groups'), {
-    name,
-    house
-  });
-  alert("Gruppe hinzugefügt!");
-  document.getElementById('group-name').value = '';
-  await fetchGroups();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  fetchActivities();
-  fetchGroups();
-});
+};
+document.addEventListener("DOMContentLoaded", loadData);

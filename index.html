@@ -3,49 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Punkteverwaltung Lager</title>
+  <title>Punktevergabe</title>
   <link rel="stylesheet" href="styles.css" />
   <script type="module" src="script.js"></script>
 </head>
 <body>
-  <h1>Punkte eintragen</h1>
+  <main>
+    <h1>Punktevergabe</h1>
+    <label for="activity-select">Spiel auswählen:</label>
+    <select id="activity-select"></select>
 
-  <label for="activity-select">Aktivität:</label>
-  <select id="activity-select"></select>
+    <div id="points-form"></div>
 
-  <div id="groups"></div>
-
-  <button onclick="savePoints()">Speichern</button>
-
-  <hr />
-
-  <section id="admin-section">
-    <h2>Neue Aktivität anlegen</h2>
-    <input type="text" id="activity-name" placeholder="Name der Aktivität" />
-    <input type="date" id="activity-date" />
-    <label>
-      <input type="number" id="activity-maxpoints" placeholder="Max Punkte" min="1" max="100" value="10" />
-    </label>
-    <label>
-      <input type="checkbox" id="activity-bonus" />
-      Bonuspunkte erlaubt?
-    </label>
-    <button onclick="createActivity()">Aktivität speichern</button>
-  </section>
-
-  <hr />
-
-  <section id="group-section">
-    <h2>Gruppen & Häuser verwalten</h2>
-    <input type="text" id="group-name" placeholder="Gruppenname" />
-    <select id="group-house">
-      <option value="Gryffindor">Gryffindor</option>
-      <option value="Hufflepuff">Hufflepuff</option>
-      <option value="Ravenclaw">Ravenclaw</option>
-      <option value="Slytherin">Slytherin</option>
-    </select>
-    <button onclick="addGroup()">Gruppe hinzufügen</button>
-    <ul id="group-list"></ul>
-  </section>
+    <button onclick="submitScores()">Speichern</button>
+    <br/><br/>
+    <a href="admin.html" id="admin-link">🔐 Zum Adminbereich</a>
+  </main>
 </body>
 </html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Adminbereich</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script type="module" src="admin.js"></script>
+</head>
+<body>
+  <main>
+    <h1>Adminbereich</h1>
+    <div id="login-section">
+      <input type="password" id="admin-pass" placeholder="Admin Passwort" />
+      <button onclick="checkLogin()">Login</button>
+    </div>
+
+    <section id="admin-panel" style="display:none;">
+      <h2>Aktivität anlegen</h2>
+      <input type="text" id="activity-name" placeholder="Name" />
+      <input type="date" id="activity-date" />
+      <button onclick="addActivity()">Anlegen</button>
+
+      <h2>Gruppe hinzufügen</h2>
+      <input type="text" id="group-name" placeholder="Gruppenname" />
+      <select id="group-house">
+        <option value="Gryffindor">Gryffindor</option>
+        <option value="Hufflepuff">Hufflepuff</option>
+        <option value="Ravenclaw">Ravenclaw</option>
+        <option value="Slytherin">Slytherin</option>
+      </select>
+      <button onclick="addGroup()">Hinzufügen</button>
+
+      <h2>Live-Rangliste</h2>
+      <div id="rankings"></div>
+
+      <h2>Alle Punkte</h2>
+      <div id="score-overview"></div>
+    </section>
+  </main>
+</body>
+</html>
