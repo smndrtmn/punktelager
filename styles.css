@@ -1,0 +1,40 @@
+body {
+    font-family: sans-serif;
+    padding: 1rem;
+    background: #1e1e1e;
+    color: white;
+  }
+  label, select, input, button {
+    display: block;
+    margin: 0.5rem 0;
+    font-size: 1rem;
+  }
+  .group-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  input[type="number"] {
+    width: 4rem;
+    padding: 0.25rem;
+  }
+  button {
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  #admin-section, #group-section {
+    margin-top: 2rem;
+    padding-top: 1rem;
+    border-top: 1px solid #444;
+  }
+  #group-list {
+    list-style: none;
+    padding-left: 0;
+  }
+  #group-list li {
+    padding: 0.25rem 0;
+  }
