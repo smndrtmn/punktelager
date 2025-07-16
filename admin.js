@@ -1,16 +1,16 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js';
-import { getFirestore, collection, getDocs, addDoc, doc } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
+import { getFirestore, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js';
 import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js';
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCwCC4f0gehJcwVQUrAy543eVrQS2LRjeo",
-    authDomain: "punktelager.firebaseapp.com",
-    projectId: "punktelager",
-    storageBucket: "punktelager.firebasestorage.app",
-    messagingSenderId: "115411096712",
-    appId: "1:115411096712:web:aa04cf1c698538966abb3d",
-    measurementId: "G-BEBNMK8KM1"
-  };
+  apiKey: "AIzaSyCwCC4f0gehJcwVQUrAy543eVrQS2LRjeo",
+  authDomain: "punktelager.firebaseapp.com",
+  projectId: "punktelager",
+  storageBucket: "punktelager.firebasestorage.app",
+  messagingSenderId: "115411096712",
+  appId: "1:115411096712:web:aa04cf1c698538966abb3d",
+  measurementId: "G-BEBNMK8KM1"
+};
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -47,34 +47,49 @@ window.addGroup = async function () {
 
 async function loadAdminData() {
   const groupByHouse = document.getElementById("toggle-rank-view")?.checked;
+  const selectedActivity = document.getElementById("activity-filter")?.value || "ALL";
 
-  // Daten laden
-  const [scoresSnap, groupsSnap] = await Promise.all([
+  const [scoresSnap, groupsSnap, activitiesSnap] = await Promise.all([
     getDocs(collection(db, "scores")),
-    getDocs(collection(db, "groups"))
+    getDocs(collection(db, "groups")),
+    getDocs(collection(db, "activities"))
   ]);
 
-  // Gruppen-Map: groupId → { name, house }
   const groupDocs = {};
   groupsSnap.forEach(doc => {
     groupDocs[doc.id] = doc.data();
   });
 
-  // Score-Map: groupId → Gesamtscore
+  // Fill activity dropdown (nur beim ersten Laden)
+  const filterSelect = document.getElementById("activity-filter");
+  if (filterSelect && filterSelect.options.length <= 1) {
+    activitiesSnap.forEach(doc => {
+      const opt = document.createElement("option");
+      opt.value = doc.id;
+      opt.textContent = doc.data().name;
+      filterSelect.appendChild(opt);
+    });
+    filterSelect.onchange = loadAdminData;
+  }
+
+  // Punkte aufsummieren
   const scoreMap = {};
   scoresSnap.forEach(doc => {
     const d = doc.data();
+    if (selectedActivity !== "ALL" && d.activityId !== selectedActivity) return;
     const gid = d.groupId;
     const sum = (d.points || 0) + (d.bonus || 0);
     scoreMap[gid] = (scoreMap[gid] || 0) + sum;
   });
 
-  // Anzeige der Rangliste
+  // RANGLISTE
   let rankingsOutput = "";
   if (groupByHouse) {
     const houseScores = {};
     Object.entries(scoreMap).forEach(([gid, score]) => {
-      const house = groupDocs[gid]?.house || "Unbekannt";
+      const group = groupDocs[gid];
+      if (!group) return;
+      const house = group.house || "Unbekannt";
       houseScores[house] = (houseScores[house] || 0) + score;
     });
 
@@ -95,7 +110,6 @@ async function loadAdminData() {
     });
 
     groupList.sort((a, b) => b.score - a.score);
-
     rankingsOutput = "<ol>";
     groupList.forEach(g => {
       rankingsOutput += `<li>${g.name} (${g.house}): ${g.score} Punkte</li>`;
@@ -105,7 +119,7 @@ async function loadAdminData() {
 
   document.getElementById("rankings").innerHTML = rankingsOutput;
 
-  // Punkteübersicht mit Details
+  // PUNKTEÜBERSICHT UNTEN (immer alle, ungefiltert)
   let overview = "";
   scoresSnap.forEach(doc => {
     const d = doc.data();
@@ -117,5 +131,5 @@ async function loadAdminData() {
   document.getElementById("score-overview").innerHTML = overview;
 }
 
+// damit loadAdminData() auch von HTML aus funktioniert
 window.loadAdminData = loadAdminData;
-

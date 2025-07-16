@@ -34,10 +34,26 @@
       <button onclick="addGroup()">Hinzufügen</button>
 
       <h2>Live-Rangliste</h2>
-      <label><input type="checkbox" id="toggle-rank-view" onchange="loadAdminData()"> Nach Häusern gruppieren</label>
-      <div id="rankings"></div>
+
+<div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+  <label><input type="checkbox" id="toggle-rank-view" onchange="loadAdminData()"> Nach Häusern gruppieren</label>
+
+  <label>
+    Spiel filtern:
+    <select id="activity-filter">
+      <option value="ALL">🔄 Alle Spiele</option>
+    </select>
+  </label>
+</div>
+
+<div id="rankings"></div>
+
 
       <h2>Alle Punkte</h2>
+      <label for="activity-filter">Aktivität auswählen:</label>
+<select id="activity-filter">
+  <option value="ALL">🔄 Alle Aktivitäten</option>
+</select>
       <div id="score-overview"></div>
     </section>
   </main>
