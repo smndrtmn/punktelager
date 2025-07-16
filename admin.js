@@ -48,42 +48,50 @@ window.addGroup = async function () {
 async function loadAdminData() {
   const groupByHouse = document.getElementById("toggle-rank-view")?.checked;
 
-  const scores = await getDocs(collection(db, "scores"));
-  const scoreMap = {};
-  scores.forEach(doc => {
-    const d = doc.data();
-    if (!scoreMap[d.groupId]) scoreMap[d.groupId] = 0;
-    scoreMap[d.groupId] += d.points + d.bonus;
+  // Daten laden
+  const [scoresSnap, groupsSnap] = await Promise.all([
+    getDocs(collection(db, "scores")),
+    getDocs(collection(db, "groups"))
+  ]);
+
+  // Gruppen-Map: groupId → { name, house }
+  const groupDocs = {};
+  groupsSnap.forEach(doc => {
+    groupDocs[doc.id] = doc.data();
   });
 
-  const groups = await getDocs(collection(db, "groups"));
-  let rankingsOutput = "";
-  const houseScores = {};
+  // Score-Map: groupId → Gesamtscore
+  const scoreMap = {};
+  scoresSnap.forEach(doc => {
+    const d = doc.data();
+    const gid = d.groupId;
+    const sum = (d.points || 0) + (d.bonus || 0);
+    scoreMap[gid] = (scoreMap[gid] || 0) + sum;
+  });
 
+  // Anzeige der Rangliste
+  let rankingsOutput = "";
   if (groupByHouse) {
-    // Punkte pro Haus
-    groups.forEach(g => {
-      const d = g.data();
-      const score = scoreMap[g.id] || 0;
-      houseScores[d.house] = (houseScores[d.house] || 0) + score;
+    const houseScores = {};
+    Object.entries(scoreMap).forEach(([gid, score]) => {
+      const house = groupDocs[gid]?.house || "Unbekannt";
+      houseScores[house] = (houseScores[house] || 0) + score;
     });
 
-    const houseSorted = Object.entries(houseScores).sort((a, b) => b[1] - a[1]);
+    const sorted = Object.entries(houseScores).sort((a, b) => b[1] - a[1]);
     rankingsOutput = "<ol>";
-    houseSorted.forEach(([house, total]) => {
+    sorted.forEach(([house, total]) => {
       rankingsOutput += `<li><strong>${house}</strong>: ${total} Punkte</li>`;
     });
     rankingsOutput += "</ol>";
   } else {
-    // Punkte pro Gruppe
-    const groupList = [];
-    groups.forEach(g => {
-      const d = g.data();
-      groupList.push({
-        name: d.name,
-        house: d.house,
-        score: scoreMap[g.id] || 0
-      });
+    const groupList = Object.entries(scoreMap).map(([gid, score]) => {
+      const g = groupDocs[gid];
+      return {
+        name: g?.name || "Unbekannt",
+        house: g?.house || "Unbekannt",
+        score
+      };
     });
 
     groupList.sort((a, b) => b.score - a.score);
@@ -97,10 +105,17 @@ async function loadAdminData() {
 
   document.getElementById("rankings").innerHTML = rankingsOutput;
 
+  // Punkteübersicht mit Details
   let overview = "";
-  scores.forEach(doc => {
+  scoresSnap.forEach(doc => {
     const d = doc.data();
-    overview += `<p><strong>${d.groupId}</strong> bei ${d.activityId}: ${d.points}+${d.bonus} – ${d.comment}</p>`;
+    const g = groupDocs[d.groupId];
+    const groupName = g?.name || d.groupId;
+    const activity = d.activityId || "Unbekannt";
+    overview += `<p><strong>${groupName}</strong> bei ${activity}: ${d.points}+${d.bonus} – ${d.comment || ""}</p>`;
   });
   document.getElementById("score-overview").innerHTML = overview;
 }
+
+window.loadAdminData = loadAdminData;
+
