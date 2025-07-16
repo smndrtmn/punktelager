@@ -46,6 +46,8 @@ window.addGroup = async function () {
 };
 
 async function loadAdminData() {
+  const groupByHouse = document.getElementById("toggle-rank-view")?.checked;
+
   const scores = await getDocs(collection(db, "scores"));
   const scoreMap = {};
   scores.forEach(doc => {
@@ -55,16 +57,45 @@ async function loadAdminData() {
   });
 
   const groups = await getDocs(collection(db, "groups"));
-  let out = "<ol>";
-  const houses = {};
-  groups.forEach(g => {
-    const d = g.data();
-    const score = scoreMap[g.id] || 0;
-    out += `<li>${d.name} (${d.house}): ${score} Punkte</li>`;
-    houses[d.house] = (houses[d.house] || 0) + score;
-  });
-  out += "</ol>";
-  document.getElementById("rankings").innerHTML = out;
+  let rankingsOutput = "";
+  const houseScores = {};
+
+  if (groupByHouse) {
+    // Punkte pro Haus
+    groups.forEach(g => {
+      const d = g.data();
+      const score = scoreMap[g.id] || 0;
+      houseScores[d.house] = (houseScores[d.house] || 0) + score;
+    });
+
+    const houseSorted = Object.entries(houseScores).sort((a, b) => b[1] - a[1]);
+    rankingsOutput = "<ol>";
+    houseSorted.forEach(([house, total]) => {
+      rankingsOutput += `<li><strong>${house}</strong>: ${total} Punkte</li>`;
+    });
+    rankingsOutput += "</ol>";
+  } else {
+    // Punkte pro Gruppe
+    const groupList = [];
+    groups.forEach(g => {
+      const d = g.data();
+      groupList.push({
+        name: d.name,
+        house: d.house,
+        score: scoreMap[g.id] || 0
+      });
+    });
+
+    groupList.sort((a, b) => b.score - a.score);
+
+    rankingsOutput = "<ol>";
+    groupList.forEach(g => {
+      rankingsOutput += `<li>${g.name} (${g.house}): ${g.score} Punkte</li>`;
+    });
+    rankingsOutput += "</ol>";
+  }
+
+  document.getElementById("rankings").innerHTML = rankingsOutput;
 
   let overview = "";
   scores.forEach(doc => {

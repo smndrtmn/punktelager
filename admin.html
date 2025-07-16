@@ -16,6 +16,8 @@
     </div>
 
     <section id="admin-panel" style="display:none;">
+      <button onclick="window.location.href='index.html'">🔙 Zurück zur Punktevergabe</button>
+
       <h2>Aktivität anlegen</h2>
       <input type="text" id="activity-name" placeholder="Name" />
       <input type="date" id="activity-date" />
@@ -32,6 +34,7 @@
       <button onclick="addGroup()">Hinzufügen</button>
 
       <h2>Live-Rangliste</h2>
+      <label><input type="checkbox" id="toggle-rank-view" onchange="loadAdminData()"> Nach Häusern gruppieren</label>
       <div id="rankings"></div>
 
       <h2>Alle Punkte</h2>
